@@ -16,6 +16,7 @@ if (entryButton) {
         dashboard.style.display = 'none';
         appContainer.style.display = 'flex';
         
+        // Jalankan kamera setelah tombol diklik
         if (!cameraStarted) {
             initMediaPipe();
             cameraStarted = true;
@@ -45,14 +46,14 @@ function createHeartFromBottom() {
     });
 }
 
-// Menangani animasi pergerakan hati ke atas (Dioptimalkan untuk Server)
+// Menangani animasi pergerakan hati ke atas
 function drawAndEmitHearts() {
     for (let i = hearts.length - 1; i >= 0; i--) {
         let h = hearts[i];
         canvasCtx.save();
         canvasCtx.globalAlpha = h.opacity;
         canvasCtx.font = `${h.size}px Arial`;
-        canvasCtx.fillStyle = '#FF1493'; // Mengunci warna dasar tulisan hati
+        canvasCtx.fillStyle = '#FF1493'; 
         canvasCtx.fillText('❤️', h.x, h.y);
         canvasCtx.restore();
 
@@ -64,7 +65,7 @@ function drawAndEmitHearts() {
     }
 }
 
-// Logika Pemrosesan AI MediaPipe
+// Logika Pemrosesan AI MediaPipe (Sudah Diperbaiki 100%)
 function onResults(results) {
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     let isVGesture = false;
@@ -72,20 +73,22 @@ function onResults(results) {
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
 
+        // --- PERBAIKAN DI SINI ---
         // Jari yang WAJIB BERDIRI (Telunjuk & Tengah)
         const isIndexUp = landmarks[8].y < landmarks[6].y;
-        const isMiddleUp = landmarks[12].y < landmarks[6].y; // disamakan base jointnya agar presisi
+        const isMiddleUp = landmarks[12].y < landmarks[10].y; // Kunci sukses: diubah ke 10 sesuai anatomi asli
 
         // Jari yang WAJIB TEKUK (Manis & Kelingking)
         const isRingDown = landmarks[16].y > landmarks[14].y;
         const isPinkyDown = landmarks[20].y > landmarks[18].y;
 
+        // Validasi Ketat 2 Jari
         if (isIndexUp && isMiddleUp && isRingDown && isPinkyDown) {
             isVGesture = true;
         }
     }
 
-    // SOLUSI GITHUB: Manipulasi Style Blur Secara Langsung via Inline JS
+    // Eksekusi Filter Langsung via Inline JS agar aman di GitHub Pages
     if (isVGesture) {
         videoElement.style.filter = "blur(25px) brightness(0.75)";
         
@@ -115,8 +118,8 @@ function initMediaPipe() {
     hands.setOptions({
         maxNumHands: 1,
         modelComplexity: 1,
-        minDetectionConfidence: 0.65, 
-        minTrackingConfidence: 0.65
+        minDetectionConfidence: 0.6, 
+        minTrackingConfidence: 0.6
     });
     hands.onResults(onResults);
 
