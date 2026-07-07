@@ -1,7 +1,6 @@
 const dashboard = document.getElementById('dashboard');
 const appContainer = document.getElementById('app-container');
 const entryButton = document.getElementById('entry-button');
-
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -10,13 +9,13 @@ const audioElement = document.getElementById('bgm');
 let hearts = [];
 let cameraStarted = false;
 
-// 1. EVENT KLIK TOMBOL MASUK DASHBOARD
+// 1. Tombol Masuk Dashboard Klik
 if (entryButton) {
     entryButton.addEventListener('click', () => {
         dashboard.style.display = 'none';
         appContainer.style.display = 'flex';
+        resizeCanvas();
         
-        // Jalankan kamera setelah tombol diklik
         if (!cameraStarted) {
             initMediaPipe();
             cameraStarted = true;
@@ -24,15 +23,12 @@ if (entryButton) {
     });
 }
 
-// Mengatur ukuran canvas layar penuh
 function resizeCanvas() {
     canvasElement.width = window.innerWidth;
     canvasElement.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
-// Membuat partikel hati dari bawah
 function createHeartFromBottom() {
     const startX = Math.random() * canvasElement.width;
     const startY = canvasElement.height + 50;
@@ -46,7 +42,6 @@ function createHeartFromBottom() {
     });
 }
 
-// Menangani animasi pergerakan hati ke atas
 function drawAndEmitHearts() {
     for (let i = hearts.length - 1; i >= 0; i--) {
         let h = hearts[i];
@@ -65,7 +60,6 @@ function drawAndEmitHearts() {
     }
 }
 
-// Logika Pemrosesan AI MediaPipe (Sudah Diperbaiki 100%)
 function onResults(results) {
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     let isVGesture = false;
@@ -73,29 +67,23 @@ function onResults(results) {
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0];
 
-        // --- PERBAIKAN DI SINI ---
-        // Jari yang WAJIB BERDIRI (Telunjuk & Tengah)
+        // Filter 2 Jari Ketat (✌️ Only)
         const isIndexUp = landmarks[8].y < landmarks[6].y;
-        const isMiddleUp = landmarks[12].y < landmarks[10].y; // Kunci sukses: diubah ke 10 sesuai anatomi asli
-
-        // Jari yang WAJIB TEKUK (Manis & Kelingking)
+        const isMiddleUp = landmarks[12].y < landmarks[10].y;
         const isRingDown = landmarks[16].y > landmarks[14].y;
         const isPinkyDown = landmarks[20].y > landmarks[18].y;
 
-        // Validasi Ketat 2 Jari
         if (isIndexUp && isMiddleUp && isRingDown && isPinkyDown) {
             isVGesture = true;
         }
     }
 
-    // Eksekusi Filter Langsung via Inline JS agar aman di GitHub Pages
+    // Eksekusi filter langsung ganti CSS via JS agar aman di GitHub Pages
     if (isVGesture) {
         videoElement.style.filter = "blur(25px) brightness(0.75)";
-        
         if (audioElement && audioElement.paused) {
-            audioElement.play().catch(err => console.log("Audio play diblokir:", err));
+            audioElement.play().catch(err => console.log(err));
         }
-
         if (Math.random() < 0.75) { 
             createHeartFromBottom();
         }
@@ -109,7 +97,6 @@ function onResults(results) {
     drawAndEmitHearts();
 }
 
-// Inisialisasi Jalur AI dan Kamera Utama
 function initMediaPipe() {
     const hands = new Hands({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -130,5 +117,5 @@ function initMediaPipe() {
         width: 640,
         height: 480
     });
-    camera.start();
+    camera.start().catch(err => alert("Gagal buka kamera: " + err));
 }
